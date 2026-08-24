@@ -252,13 +252,13 @@ function ViewerPage() {
       {stage === "verify" && (
         <div className="glass-panel rounded-xl p-8 max-w-md w-full text-center">
           <div className="mb-4 text-xs uppercase tracking-[0.4em] text-muted-foreground">rdx zone</div>
-          <h1 className="text-3xl font-black neon-text-red mb-3">SECURE MESSAGE</h1>
+          <h1 className="text-3xl font-black neon-text-sky mb-3">SECURE MESSAGE</h1>
           <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
             Aap ke liye ek one-time secure message hai. Aage barhne ke liye <b className="neon-text-green">Allow Media</b> par tap karein.
           </p>
           <button
             onClick={handleAllowMedia}
-            className="w-full py-3 rounded-md bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm neon-border-red hover:opacity-90"
+            className="w-full py-3 rounded-md bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm neon-border-sky hover:opacity-90"
           >
             &gt;&gt; Allow Media
           </button>
@@ -276,7 +276,7 @@ function ViewerPage() {
 
       {stage === "denied" && (
         <div className="glass-panel rounded-xl p-8 max-w-md w-full text-center">
-          <h2 className="text-2xl neon-text-red font-black mb-2">ACCESS DENIED</h2>
+          <h2 className="text-2xl neon-text-sky font-black mb-2">ACCESS DENIED</h2>
           <p className="text-sm text-muted-foreground">{errorMsg}</p>
           <button
             onClick={() => setStage("verify")}
@@ -289,7 +289,7 @@ function ViewerPage() {
 
       {stage === "gone" && (
         <div className="glass-panel rounded-xl p-8 max-w-md w-full text-center">
-          <h2 className="text-2xl neon-text-red font-black mb-2">MESSAGE DESTROYED</h2>
+          <h2 className="text-2xl neon-text-sky font-black mb-2">MESSAGE DESTROYED</h2>
           <p className="text-sm text-muted-foreground">{errorMsg}</p>
         </div>
       )}
@@ -304,7 +304,7 @@ function ViewerPage() {
             <div
               className="absolute inset-x-0 h-16 opacity-25"
               style={{
-                background: "linear-gradient(180deg, transparent, oklch(0.68 0.28 25 / 0.6), transparent)",
+                background: "linear-gradient(180deg, transparent, oklch(0.82 0.18 220 / 0.6), transparent)",
                 animation: "rdx-scan-y 4s linear infinite",
               }}
             />

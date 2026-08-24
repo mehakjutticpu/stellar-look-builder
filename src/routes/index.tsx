@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { createSecureMessage } from "@/lib/rdx.functions";
+import rdxLogo from "@/assets/rdx-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -77,7 +78,7 @@ function CreatePage() {
       <div
         className="pointer-events-none absolute inset-x-0 h-24 opacity-30"
         style={{
-          background: "linear-gradient(180deg, transparent, oklch(0.68 0.28 25 / 0.5), transparent)",
+          background: "linear-gradient(180deg, transparent, var(--neon-sky), transparent)",
           animation: "rdx-scan-y 6s linear infinite",
         }}
       />
@@ -92,10 +93,17 @@ function CreatePage() {
           </Link>
         </div>
         <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.4em] text-muted-foreground mb-3">
-          <span className="w-2 h-2 rounded-full bg-neon-red" style={{ animation: "rdx-pulse 1.5s infinite" }} />
+          <span className="w-2 h-2 rounded-full bg-neon-sky" style={{ animation: "rdx-pulse 1.5s infinite" }} />
           secure zone active
         </div>
-        <h1 className="text-5xl md:text-6xl font-black neon-text-red mb-2">RDX SECURITY ZONE</h1>
+        <img
+          src={rdxLogo}
+          alt="RDX Security Zone neon shield logo"
+          width={1024}
+          height={1024}
+          className="mx-auto mb-3 h-24 w-24 md:h-28 md:w-28 drop-shadow-[0_0_25px_var(--glow-sky)]"
+        />
+        <h1 className="text-5xl md:text-6xl font-black neon-text-sky mb-2">RDX SECURITY ZONE</h1>
         <p className="text-muted-foreground text-sm md:text-base">
           One-time-view encrypted messages · Camera-verified viewers · Silent capture on tampering
         </p>
@@ -114,7 +122,7 @@ function CreatePage() {
             onChange={(e) => setText(e.target.value)}
             rows={5}
             placeholder="Type a message the recipient will see once and never again..."
-            className="w-full bg-input/60 rounded-md p-3 text-foreground font-mono text-sm outline-none focus:neon-border-red border border-border transition-all resize-none"
+            className="w-full bg-input/60 rounded-md p-3 text-foreground font-mono text-sm outline-none focus:neon-border-sky border border-border transition-all resize-none"
           />
         </label>
 
@@ -138,7 +146,7 @@ function CreatePage() {
         <button
           onClick={handleGenerate}
           disabled={busy}
-          className="w-full py-3 rounded-md bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm hover:opacity-90 disabled:opacity-50 neon-border-red transition-all"
+          className="w-full py-3 rounded-md bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm hover:opacity-90 disabled:opacity-50 neon-border-sky transition-all"
         >
           {busy ? progress || "Processing..." : ">> Generate Secure Link"}
         </button>
