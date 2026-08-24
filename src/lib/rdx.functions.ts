@@ -316,3 +316,43 @@ export const adminListEvents = createServerFn({ method: "GET" }).handler(async (
   );
   return { events: withUrls };
 });
+
+// ---------- ADMIN: DELETE CAPTURE / MESSAGE ----------
+export const adminDeleteEvent = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("access_events")
+      .select("id, selfie_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (row?.selfie_path) {
+      await supabaseAdmin.storage.from("selfies").remove([row.selfie_path]);
+    }
+    const { error } = await supabaseAdmin.from("access_events").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const adminDeleteSelfie = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("access_events")
+      .select("id, selfie_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (row?.selfie_path) {
+      await supabaseAdmin.storage.from("selfies").remove([row.selfie_path]);
+    }
+    const { error } = await supabaseAdmin
+      .from("access_events")
+      .update({ selfie_path: null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });

@@ -7,6 +7,8 @@ import {
   adminLogout,
   adminListMessages,
   adminListEvents,
+  adminDeleteEvent,
+  adminDeleteSelfie,
 } from "@/lib/rdx.functions";
 
 export const Route = createFileRoute("/admin")({
@@ -50,6 +52,8 @@ function AdminPage() {
   const logout = useServerFn(adminLogout);
   const listMsg = useServerFn(adminListMessages);
   const listEvt = useServerFn(adminListEvents);
+  const delEvt = useServerFn(adminDeleteEvent);
+  const delSelfie = useServerFn(adminDeleteSelfie);
 
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
@@ -60,6 +64,33 @@ function AdminPage() {
   const [events, setEvents] = useState<Evt[]>([]);
   const [tab, setTab] = useState<"messages" | "events">("events");
   const [filterMsg, setFilterMsg] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function handleDeleteEvent(id: string) {
+    if (!window.confirm("Delete this access record and its photo permanently?")) return;
+    setBusyId(id);
+    try {
+      await delEvt({ data: { id } });
+      setEvents((prev) => prev.filter((x) => x.id !== id));
+    } catch (e) {
+      console.error("delete event failed", e);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDeleteSelfie(id: string) {
+    if (!window.confirm("Delete only the captured photo?")) return;
+    setBusyId(id);
+    try {
+      await delSelfie({ data: { id } });
+      setEvents((prev) => prev.map((x) => (x.id === id ? { ...x, selfieUrl: null } : x)));
+    } catch (e) {
+      console.error("delete selfie failed", e);
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   useEffect(() => {
     (async () => {
@@ -108,7 +139,7 @@ function AdminPage() {
         <form onSubmit={handleLogin} className="glass-panel rounded-xl p-8 max-w-sm w-full">
           <div className="mb-6 text-center">
             <div className="text-xs uppercase tracking-[0.4em] text-muted-foreground">restricted</div>
-            <h1 className="text-3xl font-black neon-text-red mt-1">RDX ADMIN</h1>
+            <h1 className="text-3xl font-black neon-text-sky mt-1">RDX ADMIN</h1>
           </div>
           <label className="block mb-3">
             <span className="block text-xs uppercase tracking-widest text-muted-foreground mb-1">Username</span>
@@ -116,7 +147,7 @@ function AdminPage() {
               value={u}
               onChange={(e) => setU(e.target.value)}
               autoComplete="username"
-              className="w-full bg-input rounded-md p-2 text-sm font-mono outline-none focus:neon-border-red border border-border"
+              className="w-full bg-input rounded-md p-2 text-sm font-mono outline-none focus:neon-border-sky border border-border"
             />
           </label>
           <label className="block mb-4">
@@ -126,13 +157,13 @@ function AdminPage() {
               value={p}
               onChange={(e) => setP(e.target.value)}
               autoComplete="current-password"
-              className="w-full bg-input rounded-md p-2 text-sm font-mono outline-none focus:neon-border-red border border-border"
+              className="w-full bg-input rounded-md p-2 text-sm font-mono outline-none focus:neon-border-sky border border-border"
             />
           </label>
           {err && <div className="text-xs text-destructive mb-3">{err}</div>}
           <button
             type="submit"
-            className="w-full py-2 rounded-md bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm neon-border-red"
+            className="w-full py-2 rounded-md bg-primary text-primary-foreground font-bold uppercase tracking-widest text-sm neon-border-sky"
           >
             &gt;&gt; Authenticate
           </button>
@@ -148,7 +179,7 @@ function AdminPage() {
       <header className="max-w-6xl mx-auto flex items-center justify-between mb-6">
         <div>
           <div className="text-xs uppercase tracking-[0.4em] text-muted-foreground">rdx admin</div>
-          <h1 className="text-3xl font-black neon-text-red">SURVEILLANCE CONSOLE</h1>
+          <h1 className="text-3xl font-black neon-text-sky">SURVEILLANCE CONSOLE</h1>
         </div>
         <div className="flex gap-2">
           <button
@@ -162,7 +193,7 @@ function AdminPage() {
               await logout({});
               setAuthed(false);
             }}
-            className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs uppercase tracking-widest neon-border-red"
+            className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs uppercase tracking-widest neon-border-sky"
           >
             Logout
           </button>
@@ -172,7 +203,7 @@ function AdminPage() {
       <div className="max-w-6xl mx-auto flex gap-2 mb-4">
         <button
           onClick={() => setTab("events")}
-          className={`px-4 py-2 rounded-md text-xs uppercase tracking-widest ${tab === "events" ? "bg-primary text-primary-foreground neon-border-red" : "bg-secondary"}`}
+          className={`px-4 py-2 rounded-md text-xs uppercase tracking-widest ${tab === "events" ? "bg-primary text-primary-foreground neon-border-sky" : "bg-secondary"}`}
         >
           Access Attempts ({visibleEvents.length})
         </button>
@@ -181,7 +212,7 @@ function AdminPage() {
             setTab("messages");
             setFilterMsg(null);
           }}
-          className={`px-4 py-2 rounded-md text-xs uppercase tracking-widest ${tab === "messages" ? "bg-primary text-primary-foreground neon-border-red" : "bg-secondary"}`}
+          className={`px-4 py-2 rounded-md text-xs uppercase tracking-widest ${tab === "messages" ? "bg-primary text-primary-foreground neon-border-sky" : "bg-secondary"}`}
         >
           Messages ({messages.length})
         </button>
@@ -204,7 +235,7 @@ function AdminPage() {
                   className={`text-[10px] px-2 py-1 rounded uppercase tracking-widest font-bold ${
                     e.event_type === "view" || e.event_type === "view_start"
                       ? "bg-accent/20 text-accent"
-                      : "bg-primary/20 neon-text-red"
+                      : "bg-primary/20 neon-text-sky"
                   }`}
                 >
                   {e.event_type}
@@ -234,7 +265,7 @@ function AdminPage() {
                     <a
                       href={e.selfieUrl}
                       download={`spy-${e.id}.jpg`}
-                      className="flex-1 text-center px-2 py-1.5 rounded bg-primary text-primary-foreground text-[10px] uppercase tracking-widest neon-border-red"
+                      className="flex-1 text-center px-2 py-1.5 rounded bg-primary text-primary-foreground text-[10px] uppercase tracking-widest neon-border-sky"
                       onClick={async (ev) => {
                         // force download even for cross-origin signed URLs
                         ev.preventDefault();
@@ -257,10 +288,38 @@ function AdminPage() {
                       Save
                     </a>
                   </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSelfie(e.id)}
+                      disabled={busyId === e.id}
+                      className="flex-1 px-2 py-1.5 rounded bg-secondary text-[10px] uppercase tracking-widest text-destructive hover:opacity-90 disabled:opacity-50"
+                    >
+                      Delete photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteEvent(e.id)}
+                      disabled={busyId === e.id}
+                      className="flex-1 px-2 py-1.5 rounded bg-destructive text-destructive-foreground text-[10px] uppercase tracking-widest hover:opacity-90 disabled:opacity-50"
+                    >
+                      Delete record
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="w-full h-48 flex items-center justify-center rounded border border-dashed border-border text-xs text-muted-foreground">
-                  no selfie
+                <div className="space-y-2">
+                  <div className="w-full h-48 flex items-center justify-center rounded border border-dashed border-border text-xs text-muted-foreground">
+                    no selfie
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteEvent(e.id)}
+                    disabled={busyId === e.id}
+                    className="w-full px-2 py-1.5 rounded bg-destructive text-destructive-foreground text-[10px] uppercase tracking-widest hover:opacity-90 disabled:opacity-50"
+                  >
+                    Delete record
+                  </button>
                 </div>
               )}
               <div className="mt-2 text-[11px] text-muted-foreground truncate">IP: {e.ip ?? "—"}</div>
@@ -311,7 +370,7 @@ function AdminPage() {
                     <td className="p-3 text-[11px]">{new Date(m.created_at).toLocaleString()}</td>
                     <td className="p-3 text-[11px]">
                       {m.viewed_at ? (
-                        <span className="neon-text-red">{new Date(m.viewed_at).toLocaleString()}</span>
+                        <span className="neon-text-sky">{new Date(m.viewed_at).toLocaleString()}</span>
                       ) : (
                         <span className="neon-text-green">pending</span>
                       )}
