@@ -14,7 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      access_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          ip: string | null
+          message_id: string | null
+          selfie_path: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          ip?: string | null
+          message_id?: string | null
+          selfie_path?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip?: string | null
+          message_id?: string | null
+          selfie_path?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_events_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "secure_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      secure_messages: {
+        Row: {
+          created_at: string
+          creator_ip: string | null
+          expires_at: string | null
+          file_name: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          storage_path: string | null
+          text_message: string | null
+          viewed_at: string | null
+          viewer_ip: string | null
+          viewer_user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          creator_ip?: string | null
+          expires_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          storage_path?: string | null
+          text_message?: string | null
+          viewed_at?: string | null
+          viewer_ip?: string | null
+          viewer_user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          creator_ip?: string | null
+          expires_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          storage_path?: string | null
+          text_message?: string | null
+          viewed_at?: string | null
+          viewer_ip?: string | null
+          viewer_user_agent?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
