@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { createSecureMessage } from "@/lib/rdx.functions";
+import rdxLogo from "@/assets/rdx-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
