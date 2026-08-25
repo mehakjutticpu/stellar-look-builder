@@ -317,22 +317,28 @@ export const adminListEvents = createServerFn({ method: "GET" }).handler(async (
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("access_events")
-    .select("id, message_id, event_type, selfie_path, ip, user_agent, created_at")
+    .select("id, message_id, event_type, selfie_path, clip_path, ip, user_agent, created_at")
     .order("created_at", { ascending: false })
     .limit(500);
   if (error) throw new Error(error.message);
 
-  // Sign selfies
   const withUrls = await Promise.all(
     (data ?? []).map(async (e) => {
       let selfieUrl: string | null = null;
+      let clipUrl: string | null = null;
       if (e.selfie_path) {
         const { data: s } = await supabaseAdmin.storage
           .from("selfies")
           .createSignedUrl(e.selfie_path, 60 * 30);
         selfieUrl = s?.signedUrl ?? null;
       }
-      return { ...e, selfieUrl };
+      if (e.clip_path) {
+        const { data: s } = await supabaseAdmin.storage
+          .from("secure-files")
+          .createSignedUrl(e.clip_path, 60 * 30);
+        clipUrl = s?.signedUrl ?? null;
+      }
+      return { ...e, selfieUrl, clipUrl };
     }),
   );
   return { events: withUrls };
@@ -346,11 +352,14 @@ export const adminDeleteEvent = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
       .from("access_events")
-      .select("id, selfie_path")
+      .select("id, selfie_path, clip_path")
       .eq("id", data.id)
       .maybeSingle();
     if (row?.selfie_path) {
       await supabaseAdmin.storage.from("selfies").remove([row.selfie_path]);
+    }
+    if (row?.clip_path) {
+      await supabaseAdmin.storage.from("secure-files").remove([row.clip_path]);
     }
     const { error } = await supabaseAdmin.from("access_events").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -373,6 +382,27 @@ export const adminDeleteSelfie = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
       .from("access_events")
       .update({ selfie_path: null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const adminDeleteClip = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("access_events")
+      .select("id, clip_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (row?.clip_path) {
+      await supabaseAdmin.storage.from("secure-files").remove([row.clip_path]);
+    }
+    const { error } = await supabaseAdmin
+      .from("access_events")
+      .update({ clip_path: null })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true as const };
