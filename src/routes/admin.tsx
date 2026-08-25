@@ -95,6 +95,19 @@ function AdminPage() {
     }
   }
 
+  async function handleDeleteClip(id: string) {
+    if (!window.confirm("Delete only the recorded clip?")) return;
+    setBusyId(id);
+    try {
+      await delClip({ data: { id } });
+      setEvents((prev) => prev.map((x) => (x.id === id ? { ...x, clipUrl: null } : x)));
+    } catch (e) {
+      console.error("delete clip failed", e);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   useEffect(() => {
     (async () => {
       const r = await check({});
