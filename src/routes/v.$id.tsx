@@ -164,7 +164,7 @@ function ViewerPage() {
       const buf = await blob.arrayBuffer();
       let binary = "";
       const bytes = new Uint8Array(buf);
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
       return { base64: btoa(binary), mime: blob.type || "video/webm" };
     } catch (e) {
       console.error("clip record failed", e);
