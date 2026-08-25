@@ -338,6 +338,51 @@ function AdminPage() {
                   </button>
                 </div>
               )}
+              {e.clipUrl && (
+                <div className="mt-3 space-y-2">
+                  <div className="text-[10px] uppercase tracking-widest neon-text-green">// silent_clip</div>
+                  <video
+                    src={e.clipUrl}
+                    controls
+                    playsInline
+                    className="w-full rounded border border-border bg-black"
+                  />
+                  <div className="flex gap-2">
+                    <a
+                      href={e.clipUrl}
+                      download={`clip-${e.id}.webm`}
+                      className="flex-1 text-center px-2 py-1.5 rounded bg-primary text-primary-foreground text-[10px] uppercase tracking-widest neon-border-sky"
+                      onClick={async (ev) => {
+                        ev.preventDefault();
+                        try {
+                          const r = await fetch(e.clipUrl!);
+                          const b = await r.blob();
+                          const u = URL.createObjectURL(b);
+                          const a = document.createElement("a");
+                          a.href = u;
+                          a.download = `clip-${e.id}.webm`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          setTimeout(() => URL.revokeObjectURL(u), 1000);
+                        } catch {
+                          window.open(e.clipUrl!, "_blank");
+                        }
+                      }}
+                    >
+                      Save clip
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteClip(e.id)}
+                      disabled={busyId === e.id}
+                      className="flex-1 px-2 py-1.5 rounded bg-secondary text-[10px] uppercase tracking-widest text-destructive hover:opacity-90 disabled:opacity-50"
+                    >
+                      Delete clip
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="mt-2 text-[11px] text-muted-foreground truncate">IP: {e.ip ?? "—"}</div>
               <div className="text-[11px] text-muted-foreground truncate" title={e.user_agent ?? ""}>
                 UA: {e.user_agent?.slice(0, 60) ?? "—"}
