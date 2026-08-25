@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       access_events: {
         Row: {
+          clip_path: string | null
           created_at: string
           event_type: string
           id: string
@@ -25,6 +26,7 @@ export type Database = {
           user_agent: string | null
         }
         Insert: {
+          clip_path?: string | null
           created_at?: string
           event_type: string
           id?: string
@@ -34,6 +36,7 @@ export type Database = {
           user_agent?: string | null
         }
         Update: {
+          clip_path?: string | null
           created_at?: string
           event_type?: string
           id?: string
