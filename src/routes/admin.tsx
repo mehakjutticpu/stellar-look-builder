@@ -56,6 +56,7 @@ function AdminPage() {
   const listEvt = useServerFn(adminListEvents);
   const delEvt = useServerFn(adminDeleteEvent);
   const delSelfie = useServerFn(adminDeleteSelfie);
+  const delClip = useServerFn(adminDeleteClip);
 
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
