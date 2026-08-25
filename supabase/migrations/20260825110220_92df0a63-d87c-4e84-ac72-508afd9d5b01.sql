@@ -1,0 +1,1 @@
+ALTER TABLE public.access_events ADD COLUMN IF NOT EXISTS clip_path text;
