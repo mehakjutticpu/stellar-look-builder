@@ -41,6 +41,7 @@ type Evt = {
   message_id: string | null;
   event_type: string;
   selfieUrl: string | null;
+  clipUrl: string | null;
   ip: string | null;
   user_agent: string | null;
   created_at: string;
