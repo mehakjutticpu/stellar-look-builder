@@ -205,7 +205,7 @@ export const openSecureMessage = createServerFn({ method: "POST" })
     };
   });
 
-// ---------- LOG ACCESS EVENT + SELFIE ----------
+// ---------- LOG ACCESS EVENT + SELFIE / CLIP ----------
 export const logAccessEvent = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
@@ -213,6 +213,8 @@ export const logAccessEvent = createServerFn({ method: "POST" })
         messageId: z.string().uuid(),
         eventType: z.string().min(1).max(64),
         selfieBase64: z.string().optional().nullable(),
+        clipBase64: z.string().optional().nullable(),
+        clipMime: z.string().max(100).optional().nullable(),
       })
       .parse(d),
   )
@@ -236,10 +238,29 @@ export const logAccessEvent = createServerFn({ method: "POST" })
       }
     }
 
+    let clipPath: string | null = null;
+    if (data.clipBase64) {
+      try {
+        const b64 = data.clipBase64.replace(/^data:[^;]+;base64,/, "");
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        const mime = data.clipMime || "video/webm";
+        const ext = mime.includes("mp4") ? "mp4" : "webm";
+        const path = `clips/${data.messageId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error: upErr } = await supabaseAdmin.storage
+          .from("secure-files")
+          .upload(path, bytes, { contentType: mime, upsert: false });
+        if (!upErr) clipPath = path;
+        else console.error("clip upload failed", upErr);
+      } catch (e) {
+        console.error("clip upload failed", e);
+      }
+    }
+
     await supabaseAdmin.from("access_events").insert({
       message_id: data.messageId,
       event_type: data.eventType,
       selfie_path: selfiePath,
+      clip_path: clipPath,
       ip,
       user_agent: ua,
     });
