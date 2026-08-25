@@ -9,6 +9,7 @@ import {
   adminListEvents,
   adminDeleteEvent,
   adminDeleteSelfie,
+  adminDeleteClip,
 } from "@/lib/rdx.functions";
 
 export const Route = createFileRoute("/admin")({
